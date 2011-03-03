@@ -16,6 +16,8 @@
 		C63543401312F0E7002D3110 /* TabBarItemSelectedBackground@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = C635433C1312F0E7002D3110 /* TabBarItemSelectedBackground@2x.png */; };
 		C65D0CEC13202E5C0010B66D /* UIImage+CulturedInspiration.m in Sources */ = {isa = PBXBuildFile; fileRef = C65D0CE913202E5C0010B66D /* UIImage+CulturedInspiration.m */; };
 		C65D0CED13202E5C0010B66D /* UIView+CulturedInspiration.m in Sources */ = {isa = PBXBuildFile; fileRef = C65D0CEB13202E5C0010B66D /* UIView+CulturedInspiration.m */; };
+		C673ABC61320340500B761BD /* LICENSE.txt in Resources */ = {isa = PBXBuildFile; fileRef = C673ABC41320340500B761BD /* LICENSE.txt */; };
+		C673ABC71320340500B761BD /* README.mdown in Resources */ = {isa = PBXBuildFile; fileRef = C673ABC51320340500B761BD /* README.mdown */; };
 		C697C8D91309E87F00A7DC70 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C697C8D81309E87F00A7DC70 /* UIKit.framework */; };
 		C697C8DB1309E87F00A7DC70 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C697C8DA1309E87F00A7DC70 /* Foundation.framework */; };
 		C697C8DD1309E87F00A7DC70 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C697C8DC1309E87F00A7DC70 /* CoreGraphics.framework */; };
@@ -66,6 +68,8 @@
 		C65D0CE913202E5C0010B66D /* UIImage+CulturedInspiration.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "UIImage+CulturedInspiration.m"; path = "ExpandableTabBar/categories/UIImage+CulturedInspiration.m"; sourceTree = "<group>"; };
 		C65D0CEA13202E5C0010B66D /* UIView+CulturedInspiration.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "UIView+CulturedInspiration.h"; path = "ExpandableTabBar/categories/UIView+CulturedInspiration.h"; sourceTree = "<group>"; };
 		C65D0CEB13202E5C0010B66D /* UIView+CulturedInspiration.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = "UIView+CulturedInspiration.m"; path = "ExpandableTabBar/categories/UIView+CulturedInspiration.m"; sourceTree = "<group>"; };
+		C673ABC41320340500B761BD /* LICENSE.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = LICENSE.txt; sourceTree = "<group>"; };
+		C673ABC51320340500B761BD /* README.mdown */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = README.mdown; sourceTree = "<group>"; };
 		C697C8D41309E87F00A7DC70 /* ExpandableTabBar.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ExpandableTabBar.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C697C8D81309E87F00A7DC70 /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
 		C697C8DA1309E87F00A7DC70 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
@@ -156,6 +160,8 @@
 		C697C8C91309E87F00A7DC70 = {
 			isa = PBXGroup;
 			children = (
+				C673ABC41320340500B761BD /* LICENSE.txt */,
+				C673ABC51320340500B761BD /* README.mdown */,
 				C697C8DE1309E87F00A7DC70 /* ExpandableTabBar */,
 				C697C8F81309E87F00A7DC70 /* ExpandableTabBarTests */,
 				C697C8D71309E87F00A7DC70 /* Frameworks */,
@@ -319,6 +325,8 @@
 				C6E8B85013202EB300006B69 /* Chat@2x.png in Resources */,
 				C6E8B85113202EB300006B69 /* Clock.png in Resources */,
 				C6E8B85213202EB300006B69 /* Clock@2x.png in Resources */,
+				C673ABC61320340500B761BD /* LICENSE.txt in Resources */,
+				C673ABC71320340500B761BD /* README.mdown in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

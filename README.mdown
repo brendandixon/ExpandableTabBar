@@ -1,0 +1,14 @@
+# Introduction
+
+ExpandableTabBar is an iOS custom tab bar control. Its behavior emulates
+the system tab bar with the addition of supporting multiple rows.
+
+## Usage
+
+Build and run the application to get a feel for the control. Then
+copy the files to your own project.
+
+## Current State
+
+Some animation features are unsupported and rotational animation could
+be improved.
