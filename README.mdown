@@ -13,5 +13,4 @@ items available, they cannot be used.
 
 ## Current State
 
-Some animation features are unsupported and rotational animation could
-be improved.
+Some animation features are unsupported.
