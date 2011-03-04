@@ -677,7 +677,7 @@ const CGFloat CiExpandableTabBarHighlightInset = 5.0;
   CGRect bounds = [self superview] ? [[self superview] bounds] : [[UIScreen mainScreen] applicationFrame];
   UIImage* image = [_itemBackgroundView image];
   
-  if (!image || image.size.width != bounds.size.width) {
+  if (!image || image.size.width != (bounds.size.width + (2 * CiExpandableTabBarPadding))) {
     [self setNeedsLayout:CiExpandableTabBarLayoutDimensions];
   }
 
