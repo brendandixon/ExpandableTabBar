@@ -24,6 +24,7 @@
 
 #import "CiExpandableTabBar.h"
 
+// Layout is broken down into phases, allowing for minimal updates
 enum CiExpandableTabBarLayout {
   CiExpandableTabBarLayoutNone            = 0,
 
@@ -36,11 +37,16 @@ enum CiExpandableTabBarLayout {
   CiExpandableTabBarLayoutAll             = NSUIntegerMax
 };
 
+// The amount of padding added to all sides so that edges remain clean during rotation
+const CGFloat CiExpandableTabBarPadding = 5.0;
 
-const NSUInteger CiExpandableTabBarDefaultSpacing = 10;
+// The default spacing around a single tab bar item
+const CGFloat CiExpandableTabBarDefaultSpacing = 10.0;
 
+// The spacing to use between the tab bar item image and its text
 const CGFloat CiExpandableTabBarImageTitleSpacing = 2.0;
 
+// The values used when creating the rounded-rect background of the selected item
 const CGFloat CiExpandableTabBarHighlightAlpha = 0.15;
 const CGFloat CiExpandableTabBarHighlightRadius = 5.0;
 const CGFloat CiExpandableTabBarHighlightInset = 5.0;
@@ -48,21 +54,36 @@ const CGFloat CiExpandableTabBarHighlightInset = 5.0;
 
 @interface CiExpandableTabBar()
 
+// The total number of rows
 @property (nonatomic, assign) NSUInteger rows;
 
+// The maximum size, including spacing, of a single tab bar item
 @property (nonatomic, assign) CGSize maxItemSize;
+
+// The number of items (excluding the "more" item) per row
 @property (nonatomic, assign) NSUInteger itemsPerRow;
+
+// The x offset to the first tab bar item
 @property (nonatomic, assign) NSUInteger dxFirstItem;
 
+// A collection of CiExpandableTabBarLayoutxxxx flags
 @property (nonatomic, assign) NSUInteger needsLayout;
 
+// The font used to render tab item text
 @property (nonatomic, retain) UIFont* font;
+
+// The top "rounded" image used in tab bar background
 @property (nonatomic, retain) UIImage* topImage;
 
+// These three subviews break the tab bar into its components:
+// - itemBackgroundView is the back-most view and renders the "black" background
+// - itemViewsParent holds the UIImageViews for all tab bar items
+// - moreItemView is the UIImageView for the "more" tab bar item
 @property (nonatomic, retain) UIImageView* itemBackgroundView;
 @property (nonatomic, retain) UIView* itemViewsParent;
 @property (nonatomic, retain) UIImageView* moreItemView;
 
+// An array of UIImageViews created for each tab bar item (for convience)
 @property (nonatomic, retain) NSMutableArray* itemViews;
 
 
@@ -107,7 +128,7 @@ const CGFloat CiExpandableTabBarHighlightInset = 5.0;
 
 @synthesize rows=_rows;
 
-- (NSUInteger)rowHeight {
+- (CGFloat)rowHeight {
   [self ensureDimensions];
   return [self maxItemSize].height;
 }
@@ -121,10 +142,10 @@ const CGFloat CiExpandableTabBarHighlightInset = 5.0;
   }
 }
 
-@synthesize spacing=_spacing;
-- (void)setSpacing:(NSUInteger)spacing {
-  if (_spacing != spacing) {
-    _spacing = spacing;
+@synthesize itemSpacing=_itemSpacing;
+- (void)setItemSpacing:(CGFloat)itemSpacing {
+  if (_itemSpacing != itemSpacing) {
+    _itemSpacing = itemSpacing;
     self.needsLayout |= CiExpandableTabBarLayoutDimensions;
   }
 }
@@ -142,6 +163,10 @@ const CGFloat CiExpandableTabBarHighlightInset = 5.0;
     _selectedBackgroundImage = [selectedBackgroundImage retain];
     self.needsLayout |= CiExpandableTabBarLayoutItemImages;
   }
+}
+
+- (CGFloat)padding {
+  return CiExpandableTabBarPadding;
 }
 
 @synthesize maxItemSize=_maxItemSize;
@@ -168,10 +193,16 @@ const CGFloat CiExpandableTabBarHighlightInset = 5.0;
 
 - (void)setCenter:(CGPoint)center {
   [super setCenter:center];
+  
+  // If no other layout is required, immediately position the view of tab bar items
+  // (If animating, this ensures that both center updates - that to the tab bar itself and
+  //  those made to the view of tab bar items - happend simultaneously, creating a smooth effect)
   if (_needsLayout == CiExpandableTabBarLayoutNone) {
     _needsLayout |= CiExpandableTabBarLayoutItemViewsParent;
     [self ensureItemViewsParent];
   }
+  
+  // Otherwise, just note that the view tab bar items needs adjusting
   else {
     self.needsLayout |= CiExpandableTabBarLayoutItemViewsParent;
   }
@@ -184,19 +215,22 @@ const CGFloat CiExpandableTabBarHighlightInset = 5.0;
 
   self = [super initWithFrame:CGRectMake(0, 0, 0, 0)];
   if (self) {
-    _spacing = CiExpandableTabBarDefaultSpacing;
+    _itemSpacing = CiExpandableTabBarDefaultSpacing;
     _needsLayout = CiExpandableTabBarLayoutAll;
-    
-    [self setClipsToBounds:YES];
-    [self setContentMode:UIViewContentModeRedraw];
 
+    // Clip contents so the row containing the active item may be shown without as a single row
+    [self setClipsToBounds:YES];
+
+    // Add a tap recognizer to capture touches
     UITapGestureRecognizer* tapGestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(handleTap:)];
     [self addGestureRecognizer:tapGestureRecognizer];
     [tapGestureRecognizer release];
 
+    // Create the standard system font for item names
     _font = [UIFont boldSystemFontOfSize:11];
     [_font retain];
-  
+
+    // Create a stretchable version of the top image
     _topImage = [UIImage imageNamed:@"TabBarGradient.png"];
     CGSize size = CGSizeMake(_topImage.size.width, _topImage.size.height);
     
@@ -209,6 +243,7 @@ const CGFloat CiExpandableTabBarHighlightInset = 5.0;
     [_topImage retain];
     UIGraphicsEndImageContext();
 
+    // Create the three subviews in the proper view order
     _itemBackgroundView = [[UIImageView alloc] init];
     [self addSubview:_itemBackgroundView];
     
@@ -220,6 +255,7 @@ const CGFloat CiExpandableTabBarHighlightInset = 5.0;
     [_moreItemView setOpaque:NO];
     [self addSubview:_moreItemView];
 
+    // Create a mutable array to hold the tab bar item views
     _itemViews = [[NSMutableArray alloc] init];
   }
 
@@ -246,6 +282,9 @@ const CGFloat CiExpandableTabBarHighlightInset = 5.0;
 
 #pragma mark - Instance Methods
 
+//---------------------------------------------------------------------------------------------
+// Create an image for a single tab bar item
+//
 - (UIImage*)imageFromTabBarItem:(UITabBarItem *)tabBarItem
                    forHighlight:(BOOL)highlighted
                        withMask:(UIImage *)alphaMask
@@ -253,7 +292,7 @@ const CGFloat CiExpandableTabBarHighlightInset = 5.0;
                   withTitleSize:(CGSize)sizeTitleMax
                  withBackground:(UIImage*)background {
   
-  // Create a state image from the passed source image and mask
+  // Create a state (normal or highlighted) image from the passed source image and mask
   UIImage* image = nil;
   if ([tabBarItem image]) {
     UIImage* tabBarImage = [tabBarItem image];
@@ -281,7 +320,7 @@ const CGFloat CiExpandableTabBarHighlightInset = 5.0;
   if (title) {
     CGRect rectTitle;
     rectTitle.origin.x = (_maxItemSize.width - sizeTitle.width) / 2;
-    rectTitle.origin.y = _maxItemSize.height - sizeTitle.height - _spacing;
+    rectTitle.origin.y = _maxItemSize.height - sizeTitle.height - _itemSpacing;
     rectTitle.size = sizeTitle;
     
     [(highlighted ? [UIColor whiteColor] : [UIColor lightGrayColor]) set];
@@ -296,7 +335,7 @@ const CGFloat CiExpandableTabBarHighlightInset = 5.0;
 
     CGPoint point;
     point.x = (_maxItemSize.width - image.size.width) / 2;
-    point.y = _spacing + (_maxItemSize.height - (2 * _spacing) - dyTitle - image.size.height) / 2;
+    point.y = _itemSpacing + (_maxItemSize.height - (2 * _itemSpacing) - dyTitle - image.size.height) / 2;
     [image drawAtPoint:point];
   }
 
@@ -306,6 +345,9 @@ const CGFloat CiExpandableTabBarHighlightInset = 5.0;
   return imageResult;
 }
 
+//---------------------------------------------------------------------------------------------
+// Determine the maximum size required and create UIImageViews for all tab bar items
+//
 - (void)ensureItemImages {
   if (_needsLayout & CiExpandableTabBarLayoutItemImages) {
 
@@ -349,8 +391,8 @@ const CGFloat CiExpandableTabBarHighlightInset = 5.0;
     }
     _maxItemSize.height += sizeTitleMax.height;
 
-    _maxItemSize.width += 2 * _spacing;
-    _maxItemSize.height += 2 * _spacing;
+    _maxItemSize.width += 2 * _itemSpacing;
+    _maxItemSize.height += 2 * _itemSpacing;
 
     // Create a background for highlighted images
     UIGraphicsBeginImageContextWithOptions(_maxItemSize, NO, 0.0);
@@ -417,13 +459,16 @@ const CGFloat CiExpandableTabBarHighlightInset = 5.0;
   }
 }
 
+//---------------------------------------------------------------------------------------------
+// Compute the number of items per row and number of rows needed to render all tab bar items
+//
 - (void)ensureDimensions {
   [self ensureItemImages];
   
   if (_needsLayout & CiExpandableTabBarLayoutDimensions) {
     CGRect bounds = [self superview] ? [[self superview] bounds] : [[UIScreen mainScreen] applicationFrame];
 
-    _itemsPerRow = bounds.size.width / _maxItemSize.width;
+    _itemsPerRow = (bounds.size.width - (2 * CiExpandableTabBarPadding)) / _maxItemSize.width;
     _rows = ([_items count] + _itemsPerRow - 1) / _itemsPerRow;
     if (_rows > 1) {
       _itemsPerRow -= 1;
@@ -437,6 +482,9 @@ const CGFloat CiExpandableTabBarHighlightInset = 5.0;
   }
 }
 
+//---------------------------------------------------------------------------------------------
+// Render the "black" background image that lies behind all other views
+//
 - (void)ensureBackgroundImage {
   [self ensureDimensions];
   
@@ -463,6 +511,9 @@ const CGFloat CiExpandableTabBarHighlightInset = 5.0;
   }
 }
 
+//---------------------------------------------------------------------------------------------
+// Position the UIImageViews for all tab bar items (except the "more" item)
+//
 - (void)ensureItemViews {
   [self ensureBackgroundImage];
 
@@ -471,16 +522,15 @@ const CGFloat CiExpandableTabBarHighlightInset = 5.0;
     
     [_itemViewsParent removeSubviews];
 
-    // Assume layout begins in the top-left
+    // Layout the rows evenly around the center
     NSUInteger dy = 0;
-    _dxFirstItem = (size.width - (_rows > 1 ? _maxItemSize.width : 0) - (_itemsPerRow * _maxItemSize.width)) / 2;
-    
-    // But, if all the buttons fit within a single row, lay them out evenly around the center
     if (_rows <= 1) {
       _dxFirstItem = (size.width / 2) - (_maxItemSize.width * ([_items count] / 2));
       if ([_items count] % 2) {
         _dxFirstItem -= _maxItemSize.width / 2;
       }
+    } else {
+      _dxFirstItem = (size.width - ((_itemsPerRow + 1) * _maxItemSize.width)) / 2;
     }
     
     // Layout all rows
@@ -504,6 +554,11 @@ const CGFloat CiExpandableTabBarHighlightInset = 5.0;
   }
 }
 
+//---------------------------------------------------------------------------------------------
+// Position the view that holds the tab bar item UIImageViews
+// - If all rows are visible, center it within the assigned bounds
+// - If just one row is visible, ensure the row with the active item is visible
+//
 - (void)ensureItemViewsParent {
   [self ensureItemViews];
 
@@ -525,23 +580,32 @@ const CGFloat CiExpandableTabBarHighlightInset = 5.0;
   }
 }
 
+//---------------------------------------------------------------------------------------------
+// Compute all necessary values and layout the subviews
+//
 - (void)layoutSubviews {
   [self ensureItemViewsParent];
   
   if (_rows > 1 && _moreTabBarItem) {
     [_moreItemView setBounds:CGRectMake(0, 0, _maxItemSize.width, _maxItemSize.height)];
-    [_moreItemView setCenter:CGPointMake((_maxItemSize.width * _itemsPerRow) + (_maxItemSize.width / 2), _maxItemSize.height / 2)];
+    [_moreItemView setCenter:CGPointMake((_maxItemSize.width * _itemsPerRow) + _dxFirstItem + (_maxItemSize.width / 2), _maxItemSize.height / 2)];
   }
   
   _needsLayout = CiExpandableTabBarLayoutNone;
 }
 
+//---------------------------------------------------------------------------------------------
+// Highlight or clear the highlight of the "more" tab bar item
+//
 - (void)highlightMoreItem:(BOOL)highlighted {
   if (_moreTabBarItem) {
     [_moreItemView setHighlighted:highlighted];
   }
 }
 
+//---------------------------------------------------------------------------------------------
+// Highlight the "active" tab bar item
+//
 - (void)highlightActiveItem {
   NSUInteger indexItem = _selectedItem ? [_items indexOfObject:_selectedItem] : NSNotFound;
   if (indexItem != NSNotFound) {
@@ -554,6 +618,9 @@ const CGFloat CiExpandableTabBarHighlightInset = 5.0;
   }
 }
 
+//---------------------------------------------------------------------------------------------
+// Replace the tab bar items; force a complete re-layout
+//
 - (void)setItems:(NSArray*)items animated:(BOOL)animated {
   [_items release];
   _items = [items retain];
@@ -564,6 +631,11 @@ const CGFloat CiExpandableTabBarHighlightInset = 5.0;
   // - Add animation
 }
 
+//---------------------------------------------------------------------------------------------
+// Respond to a tap
+// - Notify the delegate (if any)
+// - Highlight the active item
+//
 - (void)handleTap:(UIGestureRecognizer*)gestureRecognizer {
   if ([self isUserInteractionEnabled]) {
     CGPoint location = [gestureRecognizer locationInView:self];
@@ -597,6 +669,10 @@ const CGFloat CiExpandableTabBarHighlightInset = 5.0;
   }
 }
 
+//---------------------------------------------------------------------------------------------
+// Compute the size whose width matches the superview and contains enough rows to render
+// all tab bar items (plus a small amount of extra padding)
+//
 - (CGSize)sizeThatFits:(CGSize)size {
   CGRect bounds = [self superview] ? [[self superview] bounds] : [[UIScreen mainScreen] applicationFrame];
   UIImage* image = [_itemBackgroundView image];
@@ -606,7 +682,7 @@ const CGFloat CiExpandableTabBarHighlightInset = 5.0;
   }
 
   [self ensureDimensions];
-  return CGSizeMake(bounds.size.width, _maxItemSize.height * _rows);
+  return CGSizeMake(bounds.size.width + (2 * CiExpandableTabBarPadding), (_maxItemSize.height * _rows) + CiExpandableTabBarPadding);
 }
 
 @end

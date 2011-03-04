@@ -39,10 +39,11 @@ static NSString* CiExpandableTabBarMoreTitle = @"More";
 @property (nonatomic, getter=isTabBarExpanded, assign) BOOL tabBarExpanded;
 @property (nonatomic, retain) UIView* viewControllersView;
 
-- (void)ensureTabBarItems;
-- (void)ensureTabBarCenter;
-- (void)ensureTabBarLocationWithAnimation:(BOOL)animate completion:(void (^)(BOOL finished))completion;
 - (void)ensureSelectedViewControllerIsVisible;
+- (void)ensureTabBarCenter;
+- (void)ensureTabBarItems;
+- (void)ensureTabBarLocationWithAnimation:(BOOL)animate completion:(void (^)(BOOL finished))completion;
+- (void)ensureViewController:(UIViewController*)viewController toBounds:(CGRect)bounds;
 
 @end
 
@@ -188,48 +189,22 @@ static NSString* CiExpandableTabBarMoreTitle = @"More";
   [super viewDidUnload];
 }
 
-- (void)willAnimateFirstHalfOfRotationToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration {
+- (void)willAnimateRotationToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation duration:(NSTimeInterval)duration {
   DLog();
   
-  // TODO:
-  // - Improve rotation animation
-
-  [super willAnimateFirstHalfOfRotationToInterfaceOrientation:toInterfaceOrientation duration:duration];
+  [super willAnimateRotationToInterfaceOrientation:toInterfaceOrientation duration:duration];
   
   [_expandableTabBar setUserInteractionEnabled:NO];
-  
-  for (UIViewController* viewController in _viewControllers) {
-    if ([viewController respondsToSelector:@selector(willRotateToInterfaceOrientation:duration:)]) {
-      [viewController willRotateToInterfaceOrientation:toInterfaceOrientation duration:duration];
-    } else if ([viewController respondsToSelector:@selector(willAnimateFirstHalfOfRotationToInterfaceOrientation:duration:)]) {
-      [viewController willAnimateFirstHalfOfRotationToInterfaceOrientation:toInterfaceOrientation duration:duration];
-    }
-  }
-}
-
-- (void)didAnimateFirstHalfOfRotationToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation {
-  DLog();
-  [super didAnimateFirstHalfOfRotationToInterfaceOrientation:toInterfaceOrientation];
-  
-  [self ensureTabBarLocationWithAnimation:NO completion:nil];
-
-  for (UIViewController* viewController in _viewControllers) {
-    if ([viewController respondsToSelector:@selector(didAnimateFirstHalfOfRotationToInterfaceOrientation:)]) {
-      [viewController didAnimateFirstHalfOfRotationToInterfaceOrientation:toInterfaceOrientation];
-    }
-  }
-}
-
-- (void)willAnimateSecondHalfOfRotationFromInterfaceOrientation:(UIInterfaceOrientation)fromInterfaceOrientation duration:(NSTimeInterval)duration {
-  DLog();
-  [super willAnimateSecondHalfOfRotationFromInterfaceOrientation:fromInterfaceOrientation duration:duration];
-
   [self ensureTabBarLocationWithAnimation:NO completion:nil];
   
+  UIView* view = [self view];
+  CGRect bounds = [view bounds];
+  bounds.size.height -= [_expandableTabBar rowHeight];
+  [_viewControllersView setBounds:bounds];
+  [_viewControllersView setCenter:CGPointMake(bounds.size.width / 2, bounds.size.height / 2)];
+  
   for (UIViewController* viewController in _viewControllers) {
-    if ([viewController respondsToSelector:@selector(willAnimateSecondHalfOfRotationFromInterfaceOrientation:duration:)]) {
-      [viewController willAnimateSecondHalfOfRotationFromInterfaceOrientation:fromInterfaceOrientation duration:duration];
-    }
+    [self ensureViewController:viewController toBounds:bounds];
   }
 }
 
@@ -237,7 +212,6 @@ static NSString* CiExpandableTabBarMoreTitle = @"More";
   DLog();
   [super didRotateFromInterfaceOrientation:fromInterfaceOrientation];
 
-  [self ensureTabBarLocationWithAnimation:NO completion:nil];
   [_expandableTabBar setUserInteractionEnabled:YES];
   
   for (UIViewController* viewController in _viewControllers) {
@@ -275,9 +249,7 @@ static NSString* CiExpandableTabBarMoreTitle = @"More";
       [_viewControllersView addSubview:selectedViewControllerView];
       [_viewControllersView sendSubviewToBack:selectedViewControllerView];
 
-      CGRect bounds = [_viewControllersView bounds];
-      [selectedViewControllerView setBounds:CGRectMake(0, 0, bounds.size.width, bounds.size.height)];
-      [selectedViewControllerView setCenter:CGPointMake(bounds.size.width / 2, bounds.size.height / 2)];
+      [self ensureViewController:selectedViewController toBounds:[_viewControllersView bounds]];
     }
     [_viewControllersView bringSubviewToFront:selectedViewControllerView];
     
@@ -286,6 +258,20 @@ static NSString* CiExpandableTabBarMoreTitle = @"More";
     }
 
   }
+}
+
+- (void)ensureTabBarCenter {
+  CGRect bounds = [[self view] bounds];
+  CGSize tabBarSize = [_expandableTabBar bounds].size;
+
+  // Compute the tab bar view center point
+  // - When all rows are showing, use the natural center less the padding the tab bar adds
+  // - When one row is showing, center around the one row
+  CGPoint tabBarCenter = _tabBarExpanded
+                            ? CGPointMake(bounds.size.width / 2, bounds.size.height - ((tabBarSize.height - [_expandableTabBar padding]) / 2))
+                            : CGPointMake(bounds.size.width / 2, bounds.size.height + (tabBarSize.height / 2) - [_expandableTabBar rowHeight]);
+  
+  [_expandableTabBar setCenter:tabBarCenter];
 }
 
 - (void)ensureTabBarItems {
@@ -308,18 +294,9 @@ static NSString* CiExpandableTabBarMoreTitle = @"More";
   }
 }
 
-- (void)ensureTabBarCenter {
-  CGRect bounds = [[self view] bounds];
-  CGSize tabBarSize = [_expandableTabBar bounds].size;
-  CGPoint tabBarCenter = _tabBarExpanded
-                            ? CGPointMake(bounds.size.width / 2, bounds.size.height - (tabBarSize.height / 2))
-                            : CGPointMake(bounds.size.width / 2, bounds.size.height + (tabBarSize.height / 2) - [_expandableTabBar rowHeight]);
-  [_expandableTabBar setCenter:tabBarCenter];
-}
-
 - (void)ensureTabBarLocationWithAnimation:(BOOL)animate completion:(void (^)(BOOL finished))completion {
   [_expandableTabBar sizeToFit];
-
+  
   if (animate) {
     if (_tabBarExpanded) {
       [UIView animateWithDuration:_animationDuration
@@ -342,6 +319,12 @@ static NSString* CiExpandableTabBarMoreTitle = @"More";
       completion(YES);
     }
   }
+}
+
+- (void)ensureViewController:(UIViewController*)viewController toBounds:(CGRect)bounds {
+  UIView* view = [viewController view];
+  [view setBounds:CGRectMake(0, 0, bounds.size.width, bounds.size.height)];
+  [view setCenter:CGPointMake(bounds.size.width / 2, bounds.size.height / 2)];
 }
 
 - (void)setViewControllers:(NSArray*)viewControllers animated:(BOOL)animated {

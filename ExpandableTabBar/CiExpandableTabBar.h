@@ -40,16 +40,27 @@
 
 @property (nonatomic, assign) id<CiExpandableTabBarDelegate> delegate;
 
+// The array of UITabBarItems to display and the selected item
+// Note:
+// - The tab bar items cannot be Apple System Tab Bar items since those do not
+//   expose either their image or title text
 @property (nonatomic, copy) NSArray* items;
 @property (nonatomic, assign) UITabBarItem* selectedItem;
 
 @property (nonatomic, readonly) NSUInteger rows;
-@property (nonatomic, readonly) NSUInteger rowHeight;
+@property (nonatomic, readonly) CGFloat rowHeight;
 
+// An optional tab bar item used as a "more..." button
 @property (nonatomic, retain) UITabBarItem* moreTabBarItem;
 
-@property (nonatomic, assign) NSUInteger spacing;
+// The spacing to use around a single, rendered tab bar item
+@property (nonatomic, assign) CGFloat itemSpacing;
+
+// The background image to use when highlighting a tab bar item image
 @property (nonatomic, retain) UIImage* selectedBackgroundImage;
+
+// Padding added to ensure clean edges during rotation
+@property (nonatomic, readonly, assign) CGFloat padding;
 
 - (void)highlightMoreItem:(BOOL)highlighted;
 - (void)setItems:(NSArray*)items animated:(BOOL)animated;

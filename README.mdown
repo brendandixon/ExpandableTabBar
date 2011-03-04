@@ -8,6 +8,9 @@ the system tab bar with the addition of supporting multiple rows.
 Build and run the application to get a feel for the control. Then
 copy the files to your own project.
 
+Since Apple does not make the images and text of system tab bar
+items available, they cannot be used.
+
 ## Current State
 
 Some animation features are unsupported and rotational animation could

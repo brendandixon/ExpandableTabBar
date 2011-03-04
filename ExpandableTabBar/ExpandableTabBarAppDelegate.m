@@ -37,29 +37,29 @@
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
   // Create a set of dummy controllers
   NSMutableArray* viewControllers = [[NSMutableArray alloc] init];
-  UIViewController* controller;
   
   NSArray* names = [NSArray arrayWithObjects:@"Red", @"Green", @"Blue", @"Orange", @"Yellow", nil];
   NSArray* colors = [NSArray arrayWithObjects:[UIColor redColor], [UIColor greenColor], [UIColor blueColor], [UIColor orangeColor], [UIColor yellowColor], nil];
   NSArray* images = [NSArray arrayWithObjects:@"Airplane.png", @"Bookmark.png", @"Breifcase.png", @"Chat.png", @"Clock.png", nil];
-  for (NSUInteger i=0; i < 100; i++) {
-    controller = [[CiColorController alloc] init];
-    [viewControllers addObject:controller];
+  NSUInteger total = (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad ? 75 : 15);
+  for (NSUInteger i=0; i < total; i++) {
+    CiColorController* colorController = [[CiColorController alloc] init];
+    [viewControllers addObject:colorController];
 
-    ((CiColorController*)controller).color = [colors objectAtIndex:(i % [colors count])];
+    colorController.color = [colors objectAtIndex:(i % [colors count])];
 
     UIImage* image = [UIImage imageNamed:[images objectAtIndex:(i % [images count])]];
     UITabBarItem* tabBarItem = [[UITabBarItem alloc] initWithTitle:[names objectAtIndex:(i % [names count])] image:image tag:0];
     
-    [controller setTabBarItem:tabBarItem];
+    [colorController setTabBarItem:tabBarItem];
     [tabBarItem release];
-    [controller release];
+    [colorController release];
   }
 
-  controller = [[CiExpandableTabBarController alloc] initWithViewControllers:viewControllers];
-  self.window.rootViewController = controller;
+  CiExpandableTabBarController* tabBarController = [[CiExpandableTabBarController alloc] initWithViewControllers:viewControllers];
+  self.window.rootViewController = tabBarController;
 
-  [controller release];
+  [tabBarController release];
   [viewControllers release];
 
   [self.window makeKeyAndVisible];
