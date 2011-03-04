@@ -12,9 +12,11 @@
 @implementation UIView(CulturedInspiration)
 
 - (void)removeSubviews {
-  for (UIView* view in self.subviews.copy) {
+  NSArray* subviews = [self subviews].copy;
+  for (UIView* view in subviews) {
     [view removeFromSuperview];
   }
+  [subviews release];
 }
 
 @end
